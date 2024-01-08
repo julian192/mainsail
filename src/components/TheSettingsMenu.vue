@@ -100,8 +100,10 @@ import {
     mdiWebcam,
     mdiDipSwitch,
     mdiMenu,
+    mdiArrowCollapseVertical
 } from '@mdi/js'
 import SettingsMiscellaneousTab from '@/components/settings/SettingsMiscellaneousTab.vue'
+import SettingsPressureTab from './settings/SettingsPressureTab.vue'
 @Component({
     components: {
         Panel,
@@ -119,6 +121,7 @@ import SettingsMiscellaneousTab from '@/components/settings/SettingsMiscellaneou
         SettingsTimelapseTab,
         SettingsMiscellaneousTab,
         SettingsNavigationTab,
+        SettingsPressureTab
     },
 })
 export default class TheSettingsMenu extends Mixins(BaseMixin) {
@@ -202,6 +205,11 @@ export default class TheSettingsMenu extends Mixins(BaseMixin) {
                 name: 'navigation',
                 title: this.$t('Settings.NavigationTab.Navigation'),
             },
+            {
+                icon: mdiArrowCollapseVertical,
+                name: 'pressure-plugin',
+                title: this.$t('Settings.PressureTab.Pressure')
+            }
         ]
 
         if (this.moonrakerComponents.includes('timelapse')) {

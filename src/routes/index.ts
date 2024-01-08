@@ -6,7 +6,6 @@ import Files from '../pages/Files.vue'
 import History from '../pages/History.vue'
 import Timelapse from '../pages/Timelapse.vue'
 import Machine from '../pages/Machine.vue'
-import Pressure from '../pages/Pressure.vue'
 import { AsyncComponent, Component } from 'vue'
 
 import {
@@ -36,7 +35,7 @@ const routes: AppRoute[] = [
         title: 'Pressure',
         path: '/pressure',
         icon: mdiArrowCollapseVertical,
-        component: Pressure,
+        component: () => import('../pages/Pressure.vue'),
         alwaysShow: true,
         showInNavi: true,
         position: 20,
