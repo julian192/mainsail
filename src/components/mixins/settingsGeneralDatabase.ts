@@ -69,6 +69,10 @@ export default class SettingsGeneralDatabase extends BaseMixin {
                 value: 'timelapse',
                 label: this.$t('Settings.TimelapseTab.Timelapse'),
             },
+            {
+                value: 'pressure',
+                label: this.$t('Settings.PressureTab.Pressure'),
+            }
         ]
     }
 
