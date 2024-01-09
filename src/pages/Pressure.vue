@@ -3,7 +3,8 @@
         <v-row>
             <!--  Graph of current Pressure in relation of Time  -->
             <v-col class="col-12 col-md-8 pb-0">
-                <panel 
+                <panel
+                card-class="current_pressure"
                 :icon="mdiArrowCollapseVertical"
                 :title="'Current Pressure'"
                 :collapsible="false">
@@ -14,6 +15,7 @@
             <!--  Panel to make a new Measurement and store it  -->
             <v-col class="col-12 col-md-4 pb-0">
                 <panel
+                card-class="new_measurement"
                 :icon="mdiPlus"
                 :title="'New Measurement'"
                 :collapsible="false">
@@ -66,7 +68,8 @@
                     <v-btn 
                     block 
                     :color="'primary'"
-                    :disabled="isDisabled">Add Measurement</v-btn>
+                    :disabled="isDisabled"
+                    v-on:click="takeMeasurement">Add Measurement</v-btn>
                 </panel>
             </v-col>
         </v-row>
@@ -74,6 +77,7 @@
             <!--  Panel to select stored Measurements  -->
             <v-col class="col-12 col-md-4 pb-0">
                 <panel
+                card-class="stored_measurements"
                 :icon="mdiHistory"
                 :title="'Stored Measurements'"
                 :collapsible="false">
@@ -102,6 +106,7 @@
             <!--  Show Graph of the selected stored Measurement  -->
             <v-col class="col-12 col-md-8">
                 <panel
+                card-class="graph"
                 :icon="mdiChartAreaspline"
                 :title="'Graph'"
                 :collapsible="false">
@@ -140,11 +145,26 @@ export default class PagePressure extends Mixins(BaseMixin) {
     filament_diameter = "1.75 mm"
 
     filament_types: string[] = ["PLA", "PLA+", "ABS", "ASA", "PETG", "TPU"];
+    filament_min_temp: { [key: string]: number } = {"PLA": 180}
+    filament_max_temp: { [key: string]: number } = {"PLA": 220}
     filament_diameters: string[] = ["1.75 mm"];
     filament_manufacturers: string[] = ["E-Sun", "Prusa", "Geeetech"];
 
     get isDisabled():boolean{
         return !(this.new_filament_diameter && this.new_filament_type && this.new_filament_manufacturer && this.new_filament_testtemp);
+    }
+
+    takeMeasurement(){
+        let take = false;
+        if(this.new_filament_testtemp > this.filament_max_temp[this.new_filament_type] || this.new_filament_testtemp < this.filament_min_temp[this.new_filament_type]){
+            if(confirm("The Temperature is not in the typical range of the filament type \"" + this.new_filament_type + "\""))
+                take = true
+        }else{
+            take = true;
+        }
+        if(take == true){
+            console.log("Measurement taken")
+        }
     }
 }
 </script>
