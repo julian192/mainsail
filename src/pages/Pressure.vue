@@ -1,5 +1,5 @@
 <template>
-    <div v-if="klipperReadyForGui">
+    <div>
         <v-row>
             <!--  Graph of current Pressure in relation of Time  -->
             <v-col class="col-12 col-md-8 pb-0">
@@ -22,13 +22,13 @@
 
                     <div class="grid1" style="margin-top: 25px;">
                         <v-select v-model="new_filament_manufacturer"
-                        :items="filament_manufacturers"
+                        :items="cfg.manufacturers"
                         label="Manufacturer"
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
 
                         <v-select v-model="new_filament_type"
-                        :items="filament_types"
+                        :items="cfg.types"
                         label="Type"
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
@@ -59,7 +59,7 @@
                         </v-btn>
                         
                         <v-select v-model="new_filament_diameter"
-                        :items="filament_diameters"
+                        :items="cfg.diameter"
                         label="Diameter"
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
@@ -83,19 +83,19 @@
                 :collapsible="false">
                     <div class="grid3" style="margin-top: 25px;">
                         <v-select v-model="filament_manufacturer"
-                        :items="filament_manufacturers"
+                        :items="cfg.manufacturers"
                         label="Manufacturer"
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
 
                         <v-select v-model="filament_type"
-                        :items="filament_types"
+                        :items="cfg.types"
                         label="Type"
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
 
                         <v-select v-model="filament_diameter"
-                        :items="filament_diameters"
+                        :items="cfg.diameter"
                         label="Diameter"
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
@@ -122,7 +122,7 @@ import BaseMixin from '@/components/mixins/base';
 import Component from 'vue-class-component';
 import { Mixins } from 'vue-property-decorator';
 import { mdiSvg, mdiArrowCollapseVertical, mdiHistory, mdiPlus, mdiChartAreaspline, mdiChevronUp, mdiChevronDown } from '@mdi/js';
-import ConfigFilesPanel from '@/components/panels/Machine/ConfigFilesPanel.vue';
+import * as pp from 'path'
 
 interface Config{
     types: string[]
@@ -144,34 +144,48 @@ export default class PagePressure extends Mixins(BaseMixin) {
     mdiChevronUp = mdiChevronUp
     mdiChevronDown = mdiChevronDown
 
-    new_filament_type!: string
-    new_filament_diameter!: string
-    new_filament_manufacturer!: string
-    new_filament_testtemp!: number
+    new_filament_type = ""
+    new_filament_diameter = "1.75 mm"
+    new_filament_manufacturer = ""
+    new_filament_testtemp = 200
 
-    filament_type!: string
-    filament_manufacturer!: string
-    filament_diameter!: string
+    filament_type = ""
+    filament_manufacturer = ""
+    filament_diameter= "1.75 mm"
 
     cfg: Config = this.getConfig()
-    
-    /**
-    filament_types: string[] = ["PLA", "PLA+", "ABS", "ASA", "PETG", "TPU", "Nylon", "HIPS"];
-    filament_min_temp: { [key: string]: number } = {"PLA": 180, "PLA+": 180, "ABS": 220, "ASA": 230, "PETG": 220, "TPU": 220, "Nylon": 220, "HIPS": 230}
-    filament_max_temp: { [key: string]: number } = {"PLA": 220, "PLA+": 220, "ABS": 250, "ASA": 260, "PETG": 250, "TPU": 250, "Nylon": 270, "HIPS": 250}
-    filament_diameters: string[] = ["1.75 mm"];
-    filament_manufacturers: string[] = ["eSun", "Prusa", "Geeetech", "Polymaker", "Sunlu"];
-    */
 
     // Checks if the Button to take new measurement is enabled or not
     get isDisabled():boolean{
         return !(this.new_filament_diameter && this.new_filament_type && this.new_filament_manufacturer && this.new_filament_testtemp);
     }
 
-    // Loads the config from the pressure.cfg-File and puts it into the Config-Interface
-    getConfig(): Config{
+    // Loads the config from the filament.json-File and puts it into the Config-Interface
+    async getConfig(): Promise<Config>{
+        let ret!: Config
+        fetch('http://localhost:7125/server/files/config/addons/filament.json').then(response => response.json()).then(json => {
+            const parsedData = json
 
-        return {types: [], min_temp: {}, max_temp: {}, diameter: [], manufacturers: []}; 
+            const result: Config = {
+                types: parsedData.types,
+                min_temp: {},
+                max_temp: {},
+                diameter: parsedData.diameters,
+                manufacturers: parsedData.manufacturers,
+            };
+
+            parsedData.types.forEach((type: string) => {
+            const minTemp = parsedData[type][0];
+            const maxTemp = parsedData[type][1];
+
+            result.min_temp[type] = minTemp;
+            result.max_temp[type] = maxTemp;
+            });
+            this.cfg = result
+            ret = result
+            return result;
+        })
+        return ret;
     }
 
     // Takes new Measurement and adds it to the stored Measurements
