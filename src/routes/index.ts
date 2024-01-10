@@ -38,7 +38,7 @@ const routes: AppRoute[] = [
         component: () => import('../pages/Pressure.vue'),
         alwaysShow: true,
         showInNavi: true,
-        position: 20,
+        position: 11,
     },
     {
         title: 'Printers',
@@ -54,7 +54,7 @@ const routes: AppRoute[] = [
         component: Webcam,
         alwaysShow: true,
         showInNavi: true,
-        position: 30,
+        position: 20,
     },
     {
         title: 'Console',
@@ -64,7 +64,7 @@ const routes: AppRoute[] = [
         alwaysShow: true,
         showInNavi: true,
         klipperIsConnected: true,
-        position: 40,
+        position: 30,
     },
     {
         title: 'Heightmap',
@@ -74,7 +74,7 @@ const routes: AppRoute[] = [
         alwaysShow: false,
         showInNavi: true,
         klipperComponent: 'bed_mesh',
-        position: 50,
+        position: 40,
     },
     {
         title: 'G-Code Files',
@@ -84,7 +84,7 @@ const routes: AppRoute[] = [
         alwaysShow: true,
         showInNavi: true,
         registeredDirectory: 'gcodes',
-        position: 60,
+        position: 50,
     },
     {
         title: 'G-Code Viewer',
@@ -93,7 +93,7 @@ const routes: AppRoute[] = [
         component: () => import('../pages/Viewer.vue'),
         alwaysShow: true,
         showInNavi: true,
-        position: 70,
+        position: 60,
     },
     {
         title: 'History',
@@ -103,7 +103,7 @@ const routes: AppRoute[] = [
         alwaysShow: true,
         showInNavi: true,
         moonrakerComponent: 'history',
-        position: 80,
+        position: 70,
     },
     {
         title: 'Timelapse',
@@ -113,7 +113,7 @@ const routes: AppRoute[] = [
         alwaysShow: true,
         showInNavi: true,
         moonrakerComponent: 'timelapse',
-        position: 90,
+        position: 80,
     },
     {
         title: 'Machine',
@@ -122,7 +122,7 @@ const routes: AppRoute[] = [
         component: Machine,
         alwaysShow: true,
         showInNavi: true,
-        position: 100,
+        position: 90,
     },
     {
         title: null,

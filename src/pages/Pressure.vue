@@ -69,7 +69,7 @@
                     block 
                     :color="'primary'"
                     :disabled="isDisabled"
-                    v-on:click="takeMeasurement">Add Measurement</v-btn>
+                    v-on:click="takeMeasurement">Take Measurement</v-btn>
                 </panel>
             </v-col>
         </v-row>
@@ -122,6 +122,15 @@ import BaseMixin from '@/components/mixins/base';
 import Component from 'vue-class-component';
 import { Mixins } from 'vue-property-decorator';
 import { mdiSvg, mdiArrowCollapseVertical, mdiHistory, mdiPlus, mdiChartAreaspline, mdiChevronUp, mdiChevronDown } from '@mdi/js';
+import ConfigFilesPanel from '@/components/panels/Machine/ConfigFilesPanel.vue';
+
+interface Config{
+    types: string[]
+    min_temp: {[key: string]: number}
+    max_temp: {[key: string]: number}
+    diameter: string[]
+    manufacturers: string[]
+}
 
 @Component({
     components:{mdiSvg}
@@ -135,28 +144,40 @@ export default class PagePressure extends Mixins(BaseMixin) {
     mdiChevronUp = mdiChevronUp
     mdiChevronDown = mdiChevronDown
 
-    new_filament_type = ""
-    new_filament_diameter = "1.75 mm"
-    new_filament_manufacturer = ""
-    new_filament_testtemp = 220
+    new_filament_type!: string
+    new_filament_diameter!: string
+    new_filament_manufacturer!: string
+    new_filament_testtemp!: number
 
-    filament_type = "PLA"
-    filament_manufacturer = "Prusa"
-    filament_diameter = "1.75 mm"
+    filament_type!: string
+    filament_manufacturer!: string
+    filament_diameter!: string
 
-    filament_types: string[] = ["PLA", "PLA+", "ABS", "ASA", "PETG", "TPU"];
-    filament_min_temp: { [key: string]: number } = {"PLA": 180}
-    filament_max_temp: { [key: string]: number } = {"PLA": 220}
+    cfg: Config = this.getConfig()
+    
+    /**
+    filament_types: string[] = ["PLA", "PLA+", "ABS", "ASA", "PETG", "TPU", "Nylon", "HIPS"];
+    filament_min_temp: { [key: string]: number } = {"PLA": 180, "PLA+": 180, "ABS": 220, "ASA": 230, "PETG": 220, "TPU": 220, "Nylon": 220, "HIPS": 230}
+    filament_max_temp: { [key: string]: number } = {"PLA": 220, "PLA+": 220, "ABS": 250, "ASA": 260, "PETG": 250, "TPU": 250, "Nylon": 270, "HIPS": 250}
     filament_diameters: string[] = ["1.75 mm"];
-    filament_manufacturers: string[] = ["E-Sun", "Prusa", "Geeetech"];
+    filament_manufacturers: string[] = ["eSun", "Prusa", "Geeetech", "Polymaker", "Sunlu"];
+    */
 
+    // Checks if the Button to take new measurement is enabled or not
     get isDisabled():boolean{
         return !(this.new_filament_diameter && this.new_filament_type && this.new_filament_manufacturer && this.new_filament_testtemp);
     }
 
+    // Loads the config from the pressure.cfg-File and puts it into the Config-Interface
+    getConfig(): Config{
+
+        return {types: [], min_temp: {}, max_temp: {}, diameter: [], manufacturers: []}; 
+    }
+
+    // Takes new Measurement and adds it to the stored Measurements
     takeMeasurement(){
         let take = false;
-        if(this.new_filament_testtemp > this.filament_max_temp[this.new_filament_type] || this.new_filament_testtemp < this.filament_min_temp[this.new_filament_type]){
+        if(this.new_filament_testtemp > this.cfg.max_temp[this.new_filament_type] || this.new_filament_testtemp < this.cfg.min_temp[this.new_filament_type]){
             if(confirm("The Temperature is not in the typical range of the filament type \"" + this.new_filament_type + "\""))
                 take = true
         }else{
