@@ -110,7 +110,12 @@
                                     Diameter: {{ measurement.diameter }}, Temperature: {{ measurement.temperature }} °C
                                 </v-list-item-subtitle>
                             </v-list-item-content>
-                            <v-btn :color="selectedMeasurement === measurement.id ? 'primary' : ''" @click="() => { selectedMeasurement = measurement.id }">{{ selectedMeasurement === measurement.id ? 'SELECTED' : 'SELECT' }}</v-btn>
+                            <v-btn :color="selectedMeasurement === measurement.id ? 'primary' : ''" @click="() => {
+                            if(selectedMeasurement == -1) 
+                                selectedMeasurement = measurement.id 
+                            else
+                                selectedMeasurement = -1
+                            }">{{ selectedMeasurement === measurement.id ? 'SELECTED' : 'SELECT' }}</v-btn>
                             <v-btn icon @click="" :color="'primary'">
                                 <v-icon>{{ mdiDelete }}</v-icon>
                             </v-btn>
