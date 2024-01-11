@@ -122,14 +122,24 @@ import BaseMixin from '@/components/mixins/base';
 import Component from 'vue-class-component';
 import { Mixins } from 'vue-property-decorator';
 import { mdiSvg, mdiArrowCollapseVertical, mdiHistory, mdiPlus, mdiChartAreaspline, mdiChevronUp, mdiChevronDown } from '@mdi/js';
-import * as pp from 'path'
 
+// Config-Interface where the Items displayed in the App are stored
 interface Config{
     types: string[]
     min_temp: {[key: string]: number}
     max_temp: {[key: string]: number}
     diameter: string[]
     manufacturers: string[]
+}
+
+// Measurements-Interface where stored Measuremets are store in
+interface Measurement{
+    manufacturer: string
+    type: string
+    diameter: string
+    temperature: number
+    flow: string[]
+    pressure: string[]
 }
 
 @Component({
@@ -154,6 +164,7 @@ export default class PagePressure extends Mixins(BaseMixin) {
     filament_diameter= "1.75 mm"
 
     cfg: Config = this.getConfig()
+    measurements: Measurement[] = this.getMeasurements()
 
     // Checks if the Button to take new measurement is enabled or not
     get isDisabled():boolean{
@@ -164,19 +175,17 @@ export default class PagePressure extends Mixins(BaseMixin) {
     async getConfig(): Promise<Config>{
         let ret!: Config
         fetch('http://localhost:7125/server/files/config/addons/filament.json').then(response => response.json()).then(json => {
-            const parsedData = json
-
             const result: Config = {
-                types: parsedData.types,
+                types: json.types,
                 min_temp: {},
                 max_temp: {},
-                diameter: parsedData.diameters,
-                manufacturers: parsedData.manufacturers,
+                diameter: json.diameters,
+                manufacturers: json.manufacturers,
             };
 
-            parsedData.types.forEach((type: string) => {
-            const minTemp = parsedData[type][0];
-            const maxTemp = parsedData[type][1];
+            json.types.forEach((type: string) => {
+            const minTemp = json[type][0];
+            const maxTemp = json[type][1];
 
             result.min_temp[type] = minTemp;
             result.max_temp[type] = maxTemp;
@@ -184,6 +193,24 @@ export default class PagePressure extends Mixins(BaseMixin) {
             this.cfg = result
             ret = result
             return result;
+        })
+        return ret;
+    }
+
+    // Loads the Measurements from the measurements.json-File and puts them into the Measurements-Array
+    async getMeasurements(): Promise<Measurement[]>{
+        let ret!: Measurement[]
+        fetch('http://localhost:7125/server/files/config/addons/measurements.json').then(response => response.json()).then(json => {
+            let m = json.measurements.map((measurementData: any) => ({
+                manufacturer: measurementData.manufacturer,
+                type: measurementData.type,
+                diameter: measurementData.diameter,
+                temperature: parseInt(measurementData.temperature),
+                flow: measurementData.flow.map((flow: any) => parseFloat(flow)),
+                pressure: measurementData.pressure.map((pressure: any) => parseFloat(pressure)),
+            }));
+            this.measurements = m;
+            return m;
         })
         return ret;
     }
