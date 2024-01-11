@@ -100,7 +100,7 @@
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
                     </div>
-                    <v-list lines="one">
+                    <v-list lines="one" v-if="measurementsReady()">
                         <v-list-item v-for="measurement in filterMeasurements()" :key="measurement.id">
                             <v-list-item-content>
                                 <v-list-item-title>
@@ -116,7 +116,7 @@
                             else
                                 selectedMeasurement = -1
                             }">{{ selectedMeasurement === measurement.id ? 'SELECTED' : 'SELECT' }}</v-btn>
-                            <v-btn icon @click="" :color="'primary'">
+                            <v-btn icon @click="() => {deleteDialog = true; deleteSelected = measurement.id}" :color="'primary'" style="margin-left: 10px;">
                                 <v-icon>{{ mdiDelete }}</v-icon>
                             </v-btn>
                         </v-list-item>
@@ -136,6 +136,26 @@
                 </panel>
             </v-col>
         </v-row>
+        <v-dialog v-model="deleteDialog" max-width="400">
+                <panel
+                    :title="'Delete Measurement'"
+                    card-class="maschine-configfiles-delete-dialog"
+                    :margin-bottom="false">
+                    <template #buttons>
+                        <v-btn icon tile @click="deleteDialog = false">
+                            <v-icon>{{ mdiCloseThick }}</v-icon>
+                        </v-btn>
+                    </template>
+                    <v-card-text>
+                        <p class="mb-0">Do you really want to delete the selected Measurement?</p>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="" text @click="deleteDialog = false">Cancel</v-btn>
+                        <v-btn color="error" text @click="() => {deleteMeasurement(); deleteDialog = false}">Delete</v-btn>
+                    </v-card-actions>
+                </panel>
+            </v-dialog>
     </div>
 </template>
 
@@ -143,7 +163,7 @@
 import BaseMixin from '@/components/mixins/base';
 import Component from 'vue-class-component';
 import { Mixins } from 'vue-property-decorator';
-import { mdiSvg, mdiArrowCollapseVertical, mdiHistory, mdiPlus, mdiChartAreaspline, mdiChevronUp, mdiChevronDown, mdiDelete } from '@mdi/js';
+import { mdiSvg, mdiArrowCollapseVertical, mdiHistory, mdiPlus, mdiChartAreaspline, mdiChevronUp, mdiChevronDown, mdiDelete, mdiCloseThick } from '@mdi/js';
 import { measureMemory } from 'vm';
 
 // Config-Interface where the Items displayed in the App are stored
@@ -178,6 +198,7 @@ export default class PagePressure extends Mixins(BaseMixin) {
     mdiChevronUp = mdiChevronUp
     mdiChevronDown = mdiChevronDown
     mdiDelete = mdiDelete
+    mdiCloseThick = mdiCloseThick
 
     new_filament_type = ""
     new_filament_diameter = "1.75 mm"
@@ -191,6 +212,8 @@ export default class PagePressure extends Mixins(BaseMixin) {
     cfg: Config = this.getConfig()
     measurements: Measurement[] = this.getMeasurements()
     selectedMeasurement = -1
+    deleteDialog = false
+    deleteSelected = -1
 
     // Checks if the Button to take new measurement is enabled or not
     get isDisabled():boolean{
@@ -264,6 +287,24 @@ export default class PagePressure extends Mixins(BaseMixin) {
         if(take == true){
             console.log("Measurement taken")
         }
+    }
+
+    measurementsReady(): boolean{
+        if(this.measurements instanceof Promise)
+            return false;
+        return true;
+    }
+
+    deleteMeasurement(){
+        console.log("Delete Measurement " + this.deleteSelected)
+        let pos = -1
+        let i = -1
+        this.measurements.forEach((m: Measurement) => {
+            i++
+            if(m.id == this.deleteSelected)
+                pos = i
+        })
+        this.measurements.splice(pos, 1)
     }
 }
 </script>
