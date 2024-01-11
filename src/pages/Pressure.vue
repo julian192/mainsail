@@ -100,6 +100,22 @@
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
                     </div>
+                    <v-list lines="one">
+                        <v-list-item v-for="measurement in filterMeasurements()" :key="measurement.id">
+                            <v-list-item-content>
+                                <v-list-item-title>
+                                    {{ measurement.manufacturer + ' ' + measurement.type }}
+                                </v-list-item-title>
+                                <v-list-item-subtitle>
+                                    Diameter: {{ measurement.diameter }}, Temperature: {{ measurement.temperature }} °C
+                                </v-list-item-subtitle>
+                            </v-list-item-content>
+                            <v-btn :color="selectedMeasurement === measurement.id ? 'primary' : ''" @click="() => { selectedMeasurement = measurement.id }">{{ selectedMeasurement === measurement.id ? 'SELECTED' : 'SELECT' }}</v-btn>
+                            <v-btn icon @click="" :color="'primary'">
+                                <v-icon>{{ mdiDelete }}</v-icon>
+                            </v-btn>
+                        </v-list-item>
+                    </v-list>
                 </panel>
             </v-col>
 
@@ -108,9 +124,10 @@
                 <panel
                 card-class="graph"
                 :icon="mdiChartAreaspline"
-                :title="'Graph'"
+                :title="selectedMeasurement == -1 ? 'Graph' : measurements[selectedMeasurement].manufacturer + ' ' + measurements[selectedMeasurement].type + ' / ' + measurements[selectedMeasurement].diameter + ', ' + measurements[selectedMeasurement].temperature + ' °C'"
                 :collapsible="false">
-                <temp-chart />
+                <temp-chart v-if="selectedMeasurement != -1" />
+                <div v-else class="v-card__text ">Please select a Measurement to Display the Graph</div>
                 </panel>
             </v-col>
         </v-row>
@@ -121,7 +138,8 @@
 import BaseMixin from '@/components/mixins/base';
 import Component from 'vue-class-component';
 import { Mixins } from 'vue-property-decorator';
-import { mdiSvg, mdiArrowCollapseVertical, mdiHistory, mdiPlus, mdiChartAreaspline, mdiChevronUp, mdiChevronDown } from '@mdi/js';
+import { mdiSvg, mdiArrowCollapseVertical, mdiHistory, mdiPlus, mdiChartAreaspline, mdiChevronUp, mdiChevronDown, mdiDelete } from '@mdi/js';
+import { measureMemory } from 'vm';
 
 // Config-Interface where the Items displayed in the App are stored
 interface Config{
@@ -134,6 +152,7 @@ interface Config{
 
 // Measurements-Interface where stored Measuremets are store in
 interface Measurement{
+    id: number
     manufacturer: string
     type: string
     diameter: string
@@ -153,6 +172,7 @@ export default class PagePressure extends Mixins(BaseMixin) {
     mdiChartAreaspline = mdiChartAreaspline
     mdiChevronUp = mdiChevronUp
     mdiChevronDown = mdiChevronDown
+    mdiDelete = mdiDelete
 
     new_filament_type = ""
     new_filament_diameter = "1.75 mm"
@@ -161,10 +181,11 @@ export default class PagePressure extends Mixins(BaseMixin) {
 
     filament_type = ""
     filament_manufacturer = ""
-    filament_diameter= "1.75 mm"
+    filament_diameter= ""
 
     cfg: Config = this.getConfig()
     measurements: Measurement[] = this.getMeasurements()
+    selectedMeasurement = -1
 
     // Checks if the Button to take new measurement is enabled or not
     get isDisabled():boolean{
@@ -173,8 +194,7 @@ export default class PagePressure extends Mixins(BaseMixin) {
 
     // Loads the config from the filament.json-File and puts it into the Config-Interface
     async getConfig(): Promise<Config>{
-        let ret!: Config
-        fetch('http://localhost:7125/server/files/config/addons/filament.json').then(response => response.json()).then(json => {
+        let ret = fetch('http://localhost:7125/server/files/config/addons/filament.json').then(response => response.json()).then(json => {
             const result: Config = {
                 types: json.types,
                 min_temp: {},
@@ -191,7 +211,6 @@ export default class PagePressure extends Mixins(BaseMixin) {
             result.max_temp[type] = maxTemp;
             });
             this.cfg = result
-            ret = result
             return result;
         })
         return ret;
@@ -199,9 +218,10 @@ export default class PagePressure extends Mixins(BaseMixin) {
 
     // Loads the Measurements from the measurements.json-File and puts them into the Measurements-Array
     async getMeasurements(): Promise<Measurement[]>{
-        let ret!: Measurement[]
-        fetch('http://localhost:7125/server/files/config/addons/measurements.json').then(response => response.json()).then(json => {
+        let ret = fetch('http://localhost:7125/server/files/config/addons/measurements.json').then(response => response.json()).then(json => {
+            let id = 0
             let m = json.measurements.map((measurementData: any) => ({
+                id: id++,
                 manufacturer: measurementData.manufacturer,
                 type: measurementData.type,
                 diameter: measurementData.diameter,
@@ -213,6 +233,17 @@ export default class PagePressure extends Mixins(BaseMixin) {
             return m;
         })
         return ret;
+    }
+
+    // Returns the filtered Measurement-Array
+    filterMeasurements(): Measurement[]{
+        return this.measurements.filter((measurement: Measurement) => {
+      const manufacturerFilter = !this.filament_manufacturer || measurement.manufacturer.toLowerCase().includes(this.filament_manufacturer.toLowerCase());
+      const typeFilter = !this.filament_type || measurement.type.toLowerCase().includes(this.filament_type.toLowerCase());
+      const diameterFilter = !this.filament_diameter || measurement.diameter.toLowerCase().includes(this.filament_diameter.toLowerCase());
+
+      return manufacturerFilter && typeFilter && diameterFilter;
+    });
     }
 
     // Takes new Measurement and adds it to the stored Measurements
