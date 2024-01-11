@@ -236,15 +236,16 @@ export default class PagePressure extends Mixins(BaseMixin) {
     }
 
     // Returns the filtered Measurement-Array
-    filterMeasurements(): Measurement[]{
+    filterMeasurements(): Measurement[] {
         return this.measurements.filter((measurement: Measurement) => {
-      const manufacturerFilter = !this.filament_manufacturer || measurement.manufacturer.toLowerCase().includes(this.filament_manufacturer.toLowerCase());
-      const typeFilter = !this.filament_type || measurement.type.toLowerCase().includes(this.filament_type.toLowerCase());
-      const diameterFilter = !this.filament_diameter || measurement.diameter.toLowerCase().includes(this.filament_diameter.toLowerCase());
+            const manufacturerFilter = !this.filament_manufacturer || measurement.manufacturer.toLowerCase() === this.filament_manufacturer.toLowerCase();
+            const typeFilter = !this.filament_type || measurement.type.toLowerCase() === this.filament_type.toLowerCase();
+            const diameterFilter = !this.filament_diameter || measurement.diameter.toLowerCase() === this.filament_diameter.toLowerCase();
 
-      return manufacturerFilter && typeFilter && diameterFilter;
-    });
+            return manufacturerFilter && typeFilter && diameterFilter;
+        });
     }
+
 
     // Takes new Measurement and adds it to the stored Measurements
     takeMeasurement(){
