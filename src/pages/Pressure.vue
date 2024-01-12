@@ -111,10 +111,12 @@
                                 </v-list-item-subtitle>
                             </v-list-item-content>
                             <v-btn :color="selectedMeasurement === measurement.id ? 'primary' : ''" @click="() => {
-                            if(selectedMeasurement == -1) 
+                            if(selectedMeasurement != measurement.id) 
                                 selectedMeasurement = measurement.id 
                             else
                                 selectedMeasurement = -1
+                            if(selectedMeasurement != -1)
+                                setChartOptions()
                             }">{{ selectedMeasurement === measurement.id ? 'SELECTED' : 'SELECT' }}</v-btn>
                             <v-btn icon @click="() => {deleteDialog = true; deleteSelected = measurement.id}" :color="'primary'" style="margin-left: 10px;">
                                 <v-icon>{{ mdiDelete }}</v-icon>
@@ -131,7 +133,12 @@
                 :icon="mdiChartAreaspline"
                 :title="selectedMeasurement == -1 ? 'Graph' : measurements[selectedMeasurement].manufacturer + ' ' + measurements[selectedMeasurement].type + ' / ' + measurements[selectedMeasurement].diameter + ', ' + measurements[selectedMeasurement].temperature + ' °C'"
                 :collapsible="false">
-                <temp-chart v-if="selectedMeasurement != -1" />
+                <e-chart v-if="selectedMeasurement != -1"
+                    ref="tempchart"
+                    :option="chartOptions"
+                    :autoresize="true"
+                    style="height: 300px;"
+                    class="tempchart" />
                 <div v-else class="v-card__text ">Please select a Measurement to Display the Graph</div>
                 </panel>
             </v-col>
@@ -164,7 +171,6 @@ import BaseMixin from '@/components/mixins/base';
 import Component from 'vue-class-component';
 import { Mixins } from 'vue-property-decorator';
 import { mdiSvg, mdiArrowCollapseVertical, mdiHistory, mdiPlus, mdiChartAreaspline, mdiChevronUp, mdiChevronDown, mdiDelete, mdiCloseThick } from '@mdi/js';
-import { measureMemory } from 'vm';
 
 // Config-Interface where the Items displayed in the App are stored
 interface Config{
@@ -182,8 +188,8 @@ interface Measurement{
     type: string
     diameter: string
     temperature: number
-    flow: string[]
-    pressure: string[]
+    flow: number[]
+    pressure: number[]
 }
 
 @Component({
@@ -214,6 +220,7 @@ export default class PagePressure extends Mixins(BaseMixin) {
     selectedMeasurement = -1
     deleteDialog = false
     deleteSelected = -1
+    chartOptions!: Object
 
     // Checks if the Button to take new measurement is enabled or not
     get isDisabled():boolean{
@@ -305,6 +312,57 @@ export default class PagePressure extends Mixins(BaseMixin) {
                 pos = i
         })
         this.measurements.splice(pos, 1)
+    }
+
+    setChartOptions(){
+        let pos = -1
+        let i = -1
+        this.measurements.forEach((m: Measurement) =>{
+            i++
+            if(m.id == this.selectedMeasurement)
+                pos = i
+        })
+        
+        const m = this.measurements[pos]
+
+        let o: Object = {
+            darkMode: true,
+            animation: false,
+            xAxis: {
+                type: 'value',
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: 'rgba(255, 255, 255, 0.06)',
+                },
+            },
+            },
+            yAxis: {
+                type: 'value',
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: 'rgba(255, 255, 255, 0.06)',
+                },
+            },
+            },
+            grid: {
+                top: 35,
+                right: 25,
+                bottom: 30,
+                left: 35
+            },
+            series: [
+                {
+                    name: 'flow - pressure',
+                    type: 'line',
+                    smooth: true,
+                    data: m.flow.map((value, index) => [value, m.pressure[index]])
+                }
+            ],
+        }
+
+        this.chartOptions = o
     }
 }
 </script>

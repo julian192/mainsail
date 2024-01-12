@@ -13,7 +13,6 @@
 import Component from 'vue-class-component';
 import { Mixins } from 'vue-property-decorator';
 import BaseMixin from '../mixins/base';
-import { ECBasicOption } from 'echarts/types/dist/shared';
 
 @Component({
     components: {},
