@@ -1,0 +1,12 @@
+{
+  "types": ["PLA", "PLA+", "PETG", "ASA", "ABS", "TPU"],
+  "PLA": [1, 2],
+  "PLA+": [3, 4],
+  "PETG": [5, 6],
+  "ASA": [5, 6],
+  "ABS": [5, 6],
+  "TPU": [5, 6],
+  "diameters": ["1.75 mm"],
+  "manufacturers": ["Prusa", "Geetech", "E-Sun"]
+}
+

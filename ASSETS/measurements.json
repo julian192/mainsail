@@ -1,0 +1,29 @@
+{
+  "measurements": [
+    {
+      "manufacturer": "Prusa",
+      "type": "PLA",
+      "diameter": "1.75 mm",
+      "temperature": "220",
+      "flow": ["2", "5", "12"],
+      "pressure": ["12", "34", "60"]
+    },
+    {
+      "manufacturer": "Geetech",
+      "type": "TPU",
+      "diameter": "1.75 mm",
+      "temperature": "210",
+      "flow": ["2", "4", "12", "20"],
+      "pressure": ["3", "12", "20", "90"]
+    },
+    {
+      "manufacturer": "E-Sun",
+      "type": "PETG",
+      "diameter": "1.75 mm",
+      "temperature": "230",
+      "flow": ["1", "12", "15"],
+      "pressure": ["10", "12", "20"]
+    }
+  ]
+}
+
