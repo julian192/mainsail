@@ -34,10 +34,10 @@
                         </v-select>
                     </div>
                     <div class="grid2" style="justify-content: center; align-items: center; margin-bottom: 25px;">
-                        <v-btn 
-                        icon 
+                        <v-btn
+                        icon
                         @click="new_filament_testtemp--"
-                        :color="'primary'" 
+                        :color="'primary'"
                         style="margin-left: 15px;">
                             <v-icon>{{ mdiChevronDown }}</v-icon>
                         </v-btn>
@@ -49,15 +49,15 @@
                         hide-spin-buttons
                         style="margin-left: 10px; margin-right: 10px;"
                         ></v-text-field>
-                        
-                        <v-btn 
-                        icon 
+
+                        <v-btn
+                        icon
                         @click="new_filament_testtemp++"
-                        :color="'primary'" 
+                        :color="'primary'"
                         style="margin-right: 15px;">
                             <v-icon>{{ mdiChevronUp }}</v-icon>
                         </v-btn>
-                        
+
                         <v-select v-model="new_filament_diameter"
                         :items="cfg.diameter"
                         label="Diameter"
@@ -65,11 +65,11 @@
                         </v-select>
                     </div>
 
-                    <v-btn 
-                    block 
+                    <v-btn
+                    block
                     :color="'primary'"
                     :disabled="isDisabled"
-                    v-on:click="takeMeasurement">Take Measurement</v-btn>
+                    v-on:click="takeMeasurement(true)">Take Measurement</v-btn>
                 </panel>
             </v-col>
         </v-row>
@@ -99,6 +99,11 @@
                         label="Diameter"
                         style="margin-left: 15px; margin-right: 15px;">
                         </v-select>
+
+                        <v-btn
+                        style="margin-left: 15px; margin-right: 15px;"
+                        color="primary"
+                        @click="resetFilter()">Reset</v-btn>
                     </div>
                     <v-list lines="one" v-if="measurementsReady()">
                         <v-list-item v-for="measurement in filterMeasurements()" :key="measurement.id">
@@ -111,8 +116,8 @@
                                 </v-list-item-subtitle>
                             </v-list-item-content>
                             <v-btn :color="selectedMeasurement === measurement.id ? 'primary' : ''" @click="() => {
-                            if(selectedMeasurement != measurement.id) 
-                                selectedMeasurement = measurement.id 
+                            if(selectedMeasurement != measurement.id)
+                                selectedMeasurement = measurement.id
                             else
                                 selectedMeasurement = -1
                             if(selectedMeasurement != -1)
@@ -144,25 +149,45 @@
             </v-col>
         </v-row>
         <v-dialog v-model="deleteDialog" max-width="400">
-                <panel
-                    :title="'Delete Measurement'"
-                    card-class="maschine-configfiles-delete-dialog"
-                    :margin-bottom="false">
-                    <template #buttons>
-                        <v-btn icon tile @click="deleteDialog = false">
-                            <v-icon>{{ mdiCloseThick }}</v-icon>
-                        </v-btn>
-                    </template>
-                    <v-card-text>
-                        <p class="mb-0">Do you really want to delete the selected Measurement?</p>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn color="" text @click="deleteDialog = false">Cancel</v-btn>
-                        <v-btn color="error" text @click="() => {deleteMeasurement(); deleteDialog = false}">Delete</v-btn>
-                    </v-card-actions>
-                </panel>
-            </v-dialog>
+            <panel
+                :title="'Delete Measurement'"
+                card-class="maschine-configfiles-delete-dialog"
+                :margin-bottom="false">
+                <template #buttons>
+                    <v-btn icon tile @click="deleteDialog = false">
+                        <v-icon>{{ mdiCloseThick }}</v-icon>
+                    </v-btn>
+                </template>
+                <v-card-text>
+                    <p class="mb-0">Do you really want to delete the selected Measurement?</p>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="" text @click="deleteDialog = false">Cancel</v-btn>
+                    <v-btn color="error" text @click="() => {deleteMeasurement(); deleteDialog = false}">Delete</v-btn>
+                </v-card-actions>
+            </panel>
+        </v-dialog>
+        <v-dialog v-model="confirmDialog" max-width="400">
+            <panel
+                :title="'Take Measurement'"
+                card-class="maschine-configfiles-delete-dialog"
+                :margin-bottom="false">
+                <template #buttons>
+                    <v-btn icon tile @click="confirmDialog = false">
+                        <v-icon>{{ mdiCloseThick }}</v-icon>
+                    </v-btn>
+                </template>
+                <v-card-text>
+                    <p class="mb-0">The Temperature is out of range. Do you want to proceed?</p>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="" text @click="confirmDialog = false">Cancel</v-btn>
+                    <v-btn color="primary" text @click="() => {takeMeasurement(false); confirmDialog = false}">Proceed</v-btn>
+                </v-card-actions>
+            </panel>
+        </v-dialog>
     </div>
 </template>
 
@@ -219,6 +244,7 @@ export default class PagePressure extends Mixins(BaseMixin) {
     measurements: Measurement[] = this.getMeasurements()
     selectedMeasurement = -1
     deleteDialog = false
+    confirmDialog = false
     deleteSelected = -1
     chartOptions!: Object
 
@@ -281,19 +307,23 @@ export default class PagePressure extends Mixins(BaseMixin) {
         });
     }
 
+    resetFilter(){
+        this.filament_type = ""
+        this.filament_manufacturer = ""
+        this.filament_diameter = ""
+    }
+
 
     // Takes new Measurement and adds it to the stored Measurements
-    takeMeasurement(){
+    takeMeasurement(confirm: boolean){
         let take = false;
-        if(this.new_filament_testtemp > this.cfg.max_temp[this.new_filament_type] || this.new_filament_testtemp < this.cfg.min_temp[this.new_filament_type]){
-            if(confirm("The Temperature is not in the typical range of the filament type \"" + this.new_filament_type + "\""))
-                take = true
-        }else{
+        if(confirm && (this.new_filament_testtemp > this.cfg.max_temp[this.new_filament_type] || this.new_filament_testtemp < this.cfg.min_temp[this.new_filament_type]))
+                this.confirmDialog = true
+        else
             take = true;
-        }
-        if(take == true){
+
+        if(take == true)
             console.log("Measurement taken")
-        }
     }
 
     measurementsReady(): boolean{
@@ -322,7 +352,7 @@ export default class PagePressure extends Mixins(BaseMixin) {
             if(m.id == this.selectedMeasurement)
                 pos = i
         })
-        
+
         const m = this.measurements[pos]
 
         let o: Object = {
@@ -386,7 +416,7 @@ export default class PagePressure extends Mixins(BaseMixin) {
 
 .grid3 {
     display: grid;
-    grid-template-columns: 1.8fr 1fr .9fr;
+    grid-template-columns: 1.5fr .8fr 1fr .5fr;
     grid-template-rows: 1fr;
     grid-column-gap: 0px;
     grid-row-gap: 0px;
